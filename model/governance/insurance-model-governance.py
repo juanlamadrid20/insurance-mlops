@@ -80,13 +80,13 @@ class ModelGovernance:
 # Example model promotion
 governance = ModelGovernance()
 latest_version = client.get_model_version_by_alias(
-    name="juan_dev.ml.healthcare_insurance_model", 
+    name="juan_dev.ml.healthcare_insurance_model_v2", 
     alias="champion"
 ).version
 
 # Get model metrics from MLflow
 run_info = client.get_model_version(
-    "juan_dev.ml.healthcare_insurance_model", 
+    "juan_dev.ml.healthcare_insurance_model_v2", 
     latest_version
 )
 run_id = run_info.run_id
