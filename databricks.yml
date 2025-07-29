@@ -58,40 +58,56 @@ targets:
 
 resources:
   clusters:
-    # Shared development cluster for interactive work
+    # Shared development cluster for interactive work - Unity Catalog enabled
     healthcare_dev_cluster:
       cluster_name: "Healthcare MLOps Dev - ${bundle.target}"
-      spark_version: "14.3.x-cpu-ml-scala2.12"
-      node_type_id: "i3.xlarge" 
-      num_workers: 2
+      spark_version: "17.0.x-cpu-ml-scala2.13"
+      node_type_id: "rd-fleet.xlarge"
+      num_workers: 0
       autotermination_minutes: 60
       spark_conf:
-        "spark.databricks.adaptive.enabled": "true"
-        "spark.databricks.adaptive.coalescePartitions.enabled": "true"
+        "spark.master": "local[*, 4]"
+        "spark.databricks.cluster.profile": "singleNode"
+      aws_attributes:
+        first_on_demand: 1
+        availability: "SPOT_WITH_FALLBACK"
+        spot_bid_price_percent: 100
+        ebs_volume_count: 0
       custom_tags:
+        "ResourceClass": "SingleNode"
         "project": "healthcare-insurance-mlops"
         "environment": "${bundle.target}"
         "team": "data-science"
         "cost-center": "healthcare-analytics"
+      enable_elastic_disk: true
+      data_security_mode: "SINGLE_USER"
+      runtime_engine: "STANDARD"
         
-    # Production inference cluster  
+    # Production inference cluster - Unity Catalog enabled
     healthcare_inference_cluster:
       cluster_name: "Healthcare MLOps Inference - ${bundle.target}"
-      spark_version: "14.3.x-cpu-ml-scala2.12"
-      node_type_id: "i3.2xlarge"
-      num_workers: 4
+      spark_version: "17.0.x-cpu-ml-scala2.13"
+      node_type_id: "rd-fleet.2xlarge"
+      num_workers: 2
       autotermination_minutes: 30
-      enable_elastic_disk: true
       spark_conf:
         "spark.databricks.adaptive.enabled": "true"
         "spark.databricks.adaptive.coalescePartitions.enabled": "true"
         "spark.sql.execution.arrow.maxRecordsPerBatch": "10000"
         "spark.sql.adaptive.skewJoin.enabled": "true"
+      aws_attributes:
+        first_on_demand: 1
+        availability: "SPOT_WITH_FALLBACK"
+        spot_bid_price_percent: 100
+        ebs_volume_count: 0
       custom_tags:
         "project": "healthcare-insurance-mlops"
         "environment": "${bundle.target}"
         "workload": "batch-inference"
         "cost-center": "healthcare-analytics"
+      enable_elastic_disk: true
+      data_security_mode: "SINGLE_USER"
+      runtime_engine: "STANDARD"
 
   jobs:
     feature_engineering_job:
