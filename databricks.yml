@@ -57,26 +57,49 @@ targets:
       service_principal_name: healthcare-mlops-prod-sp # Replace with your service principal
 
 resources:
+  clusters:
+    # Shared development cluster for interactive work
+    healthcare_dev_cluster:
+      cluster_name: "Healthcare MLOps Dev - ${bundle.target}"
+      spark_version: "14.3.x-cpu-ml-scala2.12"
+      node_type_id: "i3.xlarge" 
+      num_workers: 2
+      autotermination_minutes: 60
+      spark_conf:
+        "spark.databricks.adaptive.enabled": "true"
+        "spark.databricks.adaptive.coalescePartitions.enabled": "true"
+      custom_tags:
+        "project": "healthcare-insurance-mlops"
+        "environment": "${bundle.target}"
+        "team": "data-science"
+        "cost-center": "healthcare-analytics"
+        
+    # Production inference cluster  
+    healthcare_inference_cluster:
+      cluster_name: "Healthcare MLOps Inference - ${bundle.target}"
+      spark_version: "14.3.x-cpu-ml-scala2.12"
+      node_type_id: "i3.2xlarge"
+      num_workers: 4
+      autotermination_minutes: 30
+      enable_elastic_disk: true
+      spark_conf:
+        "spark.databricks.adaptive.enabled": "true"
+        "spark.databricks.adaptive.coalescePartitions.enabled": "true"
+        "spark.sql.execution.arrow.maxRecordsPerBatch": "10000"
+        "spark.sql.adaptive.skewJoin.enabled": "true"
+      custom_tags:
+        "project": "healthcare-insurance-mlops"
+        "environment": "${bundle.target}"
+        "workload": "batch-inference"
+        "cost-center": "healthcare-analytics"
+
   jobs:
     feature_engineering_job:
       name: "[${bundle.target}] Healthcare Feature Engineering"
       description: "Extract and engineer features for healthcare insurance model"
-      job_clusters:
-        - job_cluster_key: "feature_cluster"
-          new_cluster:
-            spark_version: "14.3.x-cpu-ml-scala2.12"
-            node_type_id: "i3.xlarge"  
-            num_workers: 2
-            spark_conf:
-              "spark.databricks.cluster.profile": "singleNode"
-              "spark.master": "local[*]"
-            custom_tags:
-              "project": "healthcare-insurance-mlops"
-              "environment": "${bundle.target}"
-              "component": "feature-engineering"
       tasks:
         - task_key: "feature_engineering"
-          job_cluster_key: "feature_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           notebook_task:
             notebook_path: "./00-training/00-insurance-model-feature.ipynb"
             base_parameters:
@@ -91,22 +114,9 @@ resources:
     model_training_job:
       name: "[${bundle.target}] Healthcare Model Training"
       description: "Train healthcare insurance prediction model"
-      job_clusters:
-        - job_cluster_key: "training_cluster"
-          new_cluster:
-            spark_version: "14.3.x-cpu-ml-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 4
-            spark_conf:
-              "spark.databricks.adaptive.enabled": "true"
-              "spark.databricks.adaptive.coalescePartitions.enabled": "true"
-            custom_tags:
-              "project": "healthcare-insurance-mlops"
-              "environment": "${bundle.target}"
-              "component": "model-training"
       tasks:
         - task_key: "model_training"
-          job_cluster_key: "training_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           notebook_task:
             notebook_path: "./00-training/01-insurance-model-train.ipynb"
             base_parameters:
@@ -122,19 +132,9 @@ resources:
     model_governance_job:
       name: "[${bundle.target}] Healthcare Model Governance"
       description: "Validate and promote healthcare insurance model"
-      job_clusters:
-        - job_cluster_key: "governance_cluster"
-          new_cluster:
-            spark_version: "14.3.x-cpu-ml-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 1
-            custom_tags:
-              "project": "healthcare-insurance-mlops"
-              "environment": "${bundle.target}"
-              "component": "model-governance"
       tasks:
         - task_key: "model_governance"
-          job_cluster_key: "governance_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           python_wheel_task:
             package_name: "healthcare_mlops"
             entry_point: "run_governance"
@@ -154,23 +154,9 @@ resources:
     batch_inference_job:
       name: "[${bundle.target}] Healthcare Batch Inference"
       description: "Run batch inference for healthcare insurance predictions"
-      job_clusters:
-        - job_cluster_key: "inference_cluster"
-          new_cluster:
-            spark_version: "14.3.x-cpu-ml-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 8
-            spark_conf:
-              "spark.databricks.adaptive.enabled": "true"
-              "spark.databricks.adaptive.coalescePartitions.enabled": "true"
-              "spark.sql.execution.arrow.maxRecordsPerBatch": "10000"
-            custom_tags:
-              "project": "healthcare-insurance-mlops"
-              "environment": "${bundle.target}"
-              "component": "batch-inference"
       tasks:
         - task_key: "batch_inference"
-          job_cluster_key: "inference_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_inference_cluster.id}"
           notebook_task:
             notebook_path: "./02-batch/insurance-model-batch.ipynb"
             base_parameters:
@@ -192,19 +178,9 @@ resources:
     model_monitoring_job:
       name: "[${bundle.target}] Healthcare Model Monitoring"
       description: "Monitor healthcare insurance model performance and drift"
-      job_clusters:
-        - job_cluster_key: "monitoring_cluster"
-          new_cluster:
-            spark_version: "14.3.x-cpu-ml-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 2
-            custom_tags:
-              "project": "healthcare-insurance-mlops"
-              "environment": "${bundle.target}"
-              "component": "model-monitoring"
       tasks:
         - task_key: "setup_monitoring"
-          job_cluster_key: "monitoring_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           notebook_task:
             notebook_path: "./03-monitoring/insurance-model-monitor.ipynb"
             base_parameters:
@@ -215,7 +191,7 @@ resources:
               action: "setup_monitoring"
           timeout_seconds: 1800
         - task_key: "drift_analysis"
-          job_cluster_key: "monitoring_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           depends_on:
             - task_key: "setup_monitoring"
           notebook_task:
@@ -238,21 +214,9 @@ resources:
     ml_training_pipeline:
       name: "[${bundle.target}] Healthcare ML Training Pipeline"
       description: "End-to-end ML training pipeline for healthcare insurance model"
-      job_clusters:
-        - job_cluster_key: "pipeline_cluster"
-          new_cluster:
-            spark_version: "14.3.x-cpu-ml-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 4
-            spark_conf:
-              "spark.databricks.adaptive.enabled": "true"
-            custom_tags:
-              "project": "healthcare-insurance-mlops"
-              "environment": "${bundle.target}"
-              "component": "ml-pipeline"
       tasks:
         - task_key: "feature_engineering"
-          job_cluster_key: "pipeline_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           notebook_task:
             notebook_path: "./00-training/00-insurance-model-feature.ipynb"
             base_parameters:
@@ -262,7 +226,7 @@ resources:
           timeout_seconds: 3600
           
         - task_key: "model_training"
-          job_cluster_key: "pipeline_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           depends_on:
             - task_key: "feature_engineering"
           notebook_task:
@@ -275,7 +239,7 @@ resources:
           timeout_seconds: 7200
           
         - task_key: "model_governance"
-          job_cluster_key: "pipeline_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           depends_on:
             - task_key: "model_training"
           python_wheel_task:
@@ -291,7 +255,7 @@ resources:
           timeout_seconds: 1800
           
         - task_key: "batch_inference_validation"
-          job_cluster_key: "pipeline_cluster"
+          existing_cluster_id: "${resources.clusters.healthcare_inference_cluster.id}"
           depends_on:
             - task_key: "model_governance"
           notebook_task:
