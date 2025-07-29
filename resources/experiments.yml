@@ -1,0 +1,62 @@
+resources:
+  experiments:
+    healthcare_feature_experiment:
+      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/feature-engineering"
+      tags:
+        - key: "project"
+          value: "healthcare-insurance-mlops"
+        - key: "environment"
+          value: "${bundle.target}"
+        - key: "component"
+          value: "feature-engineering"
+      
+    healthcare_training_experiment:
+      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/model-training"
+      tags:
+        - key: "project"
+          value: "healthcare-insurance-mlops"
+        - key: "environment"
+          value: "${bundle.target}"
+        - key: "component"
+          value: "model-training"
+      
+    healthcare_governance_experiment:
+      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/model-governance"
+      tags:
+        - key: "project"
+          value: "healthcare-insurance-mlops"
+        - key: "environment"
+          value: "${bundle.target}"
+        - key: "component"
+          value: "model-governance"
+      
+    healthcare_monitoring_experiment:
+      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/model-monitoring"
+      tags:
+        - key: "project"
+          value: "healthcare-insurance-mlops"
+        - key: "environment"
+          value: "${bundle.target}"
+        - key: "component"
+          value: "model-monitoring"
+
+  model_serving_endpoints:
+    healthcare_insurance_endpoint:
+      name: "healthcare-insurance-${bundle.target}"
+      config:
+        served_entities:
+          - entity_name: "${var.catalog}.${var.ml_schema}.${var.model_name}"
+            entity_version: "1"
+            workload_size: "Small"
+            scale_to_zero_enabled: true
+        traffic_config:
+          routes:
+            - served_model_name: "${var.catalog}.${var.ml_schema}.${var.model_name}-1"
+              traffic_percentage: 100
+      tags:
+        - key: "project"
+          value: "healthcare-insurance-mlops"
+        - key: "environment"
+          value: "${bundle.target}"
+        - key: "team"
+          value: "data-science"
