@@ -151,16 +151,12 @@ resources:
       tasks:
         - task_key: "model_governance"
           existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
-          python_wheel_task:
-            package_name: "healthcare_mlops"
-            entry_point: "run_governance"
-            parameters: 
-              - "--catalog=${var.catalog}"
-              - "--schema=${var.ml_schema}"
-              - "--model-name=${var.model_name}"
-          libraries:
-            - pypi:
-                package: "mlflow>=2.8.0"
+          notebook_task:
+            notebook_path: "./01-governance/insurance-model-governance.py"
+            base_parameters:
+              catalog: "${var.catalog}"
+              schema: "${var.ml_schema}"
+              model_name: "${var.model_name}"
           timeout_seconds: 1800
       email_notifications:
         on_failure: ["juan.lamadrid@databricks.com"] # Replace with your email
@@ -258,16 +254,12 @@ resources:
           existing_cluster_id: "${resources.clusters.healthcare_dev_cluster.id}"
           depends_on:
             - task_key: "model_training"
-          python_wheel_task:
-            package_name: "healthcare_mlops"
-            entry_point: "run_governance"
-            parameters:
-              - "--catalog=${var.catalog}"
-              - "--schema=${var.ml_schema}"
-              - "--model-name=${var.model_name}"
-          libraries:
-            - pypi:
-                package: "mlflow>=2.8.0"
+          notebook_task:
+            notebook_path: "./01-governance/insurance-model-governance.py"
+            base_parameters:
+              catalog: "${var.catalog}"
+              schema: "${var.ml_schema}"
+              model_name: "${var.model_name}"
           timeout_seconds: 1800
           
         - task_key: "batch_inference_validation"
