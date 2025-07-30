@@ -122,6 +122,7 @@ resources:
               catalog: "${var.catalog}"
               schema: "${var.schema}"
               ml_schema: "${var.ml_schema}"
+              experiment_name: "${resources.experiments.healthcare_model_experiments.name}"
           timeout_seconds: 3600
       email_notifications:
         on_failure: ["juan.lamadrid@databricks.com"] # Replace with your email
@@ -140,6 +141,7 @@ resources:
               schema: "${var.schema}"
               ml_schema: "${var.ml_schema}"
               model_name: "${var.model_name}"
+              experiment_name: "${resources.experiments.healthcare_model_experiments.name}"
           timeout_seconds: 7200
       email_notifications:
         on_failure: ["juan.lamadrid@databricks.com"] # Replace with your email
@@ -235,6 +237,7 @@ resources:
               catalog: "${var.catalog}"
               schema: "${var.schema}"
               ml_schema: "${var.ml_schema}"
+              experiment_name: "${resources.experiments.healthcare_model_experiments.name}"
           timeout_seconds: 3600
           
         - task_key: "model_training"
@@ -248,6 +251,7 @@ resources:
               schema: "${var.schema}"
               ml_schema: "${var.ml_schema}"
               model_name: "${var.model_name}"
+              experiment_name: "${resources.experiments.healthcare_model_experiments.name}"
           timeout_seconds: 7200
           
         - task_key: "model_governance"

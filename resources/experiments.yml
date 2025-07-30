@@ -1,17 +1,8 @@
 resources:
   experiments:
-    healthcare_feature_experiment:
-      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/feature-engineering"
-      tags:
-        - key: "project"
-          value: "healthcare-insurance-mlops"
-        - key: "environment"
-          value: "${bundle.target}"
-        - key: "component"
-          value: "feature-engineering"
       
-    healthcare_training_experiment:
-      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/model-training"
+    healthcare_model_experiments:
+      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/healthcare_model_experiments"
       tags:
         - key: "project"
           value: "healthcare-insurance-mlops"
@@ -19,26 +10,6 @@ resources:
           value: "${bundle.target}"
         - key: "component"
           value: "model-training"
-      
-    healthcare_governance_experiment:
-      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/model-governance"
-      tags:
-        - key: "project"
-          value: "healthcare-insurance-mlops"
-        - key: "environment"
-          value: "${bundle.target}"
-        - key: "component"
-          value: "model-governance"
-      
-    healthcare_monitoring_experiment:
-      name: "/Users/juan.lamadrid@databricks.com/experiments/healthcare-mlops-${bundle.target}/model-monitoring"
-      tags:
-        - key: "project"
-          value: "healthcare-insurance-mlops"
-        - key: "environment"
-          value: "${bundle.target}"
-        - key: "component"
-          value: "model-monitoring"
 
   # model_serving_endpoints:
   #   healthcare_insurance_endpoint:
